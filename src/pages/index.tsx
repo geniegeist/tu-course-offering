@@ -237,7 +237,7 @@ export default function Home(props: Props) {
                       {mod.name}
                     </Typography>
                   </AccordionSummary>
-                  <AccordionDetails>
+                  <AccordionDetails sx={{ p: 0, overflow: 'scroll' }}>
                     <List>
                       {mod.events.map((ev) => {
                         return (
@@ -248,7 +248,7 @@ export default function Home(props: Props) {
                             >
                               <Typography
                                 variant="body1"
-                                sx={{ minWidth: 200 }}
+                                sx={{ minWidth: 140 }}
                               >
                                 <strong>{ev.type}</strong>{' '}
                                 {ev.lecturer
@@ -327,7 +327,7 @@ export default function Home(props: Props) {
 export async function getStaticProps() {
   const now = new Date();
 
-  const studiengange = [42, 88];
+  const studiengange = [88];
   const modules: Record<string, Modul> = {};
 
   for (let j = 0; j < studiengange.length; j++) {
@@ -335,7 +335,6 @@ export async function getStaticProps() {
     const modulListenGruppe = await fetchModulListenGruppe(studiengang);
 
     for (let i = 0; i < modulListenGruppe.length; i++) {
-      // for (let i = 2; i < 3; i++) {
       const { value, name } = modulListenGruppe[i];
 
       if (name === 'Listengruppe wählen...') {
