@@ -1,6 +1,8 @@
 import Page from '@/components/Page';
 import {
   Avatar,
+  Box,
+  Button,
   Container,
   List,
   ListItem,
@@ -10,6 +12,7 @@ import {
   Stack,
   styled,
   Typography,
+  useTheme,
 } from '@mui/material';
 import { mockup } from '@/model/example';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -20,13 +23,25 @@ import MuiAccordionSummary, {
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
 import MuiAccordionDetails from '@mui/material/AccordionDetails';
 import { getLink } from '@/utils/getLink';
-import { Modul, Root } from '@/types/model';
+import {
+  Modul,
+  Root,
+  UniversityEvent,
+  UniversityEventType,
+} from '@/types/model';
 import { mock } from 'node:test';
 import {
   fetchModulListenGruppe,
   fetchVertiefungsModule,
 } from '@/services/scraper';
 import delay from 'delay';
+import { formatRawDate, isValidRawDate } from '@/utils/formatRawDate';
+import Label from '@/components/Label';
+import FullCalendar from '@fullcalendar/react'; // must go before plugins
+import timeGridPlugin from '@fullcalendar/timegrid';
+import { addMinutes, isMonday } from 'date-fns';
+import { useState } from 'react';
+import { EventInput, EventSourceInput } from '@fullcalendar/core';
 
 const Accordion = styled((props: AccordionProps) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -78,23 +93,145 @@ type Props = {
 };
 
 export default function Home(props: Props) {
+  const today = new Date();
+
+  const theme = useTheme();
+
+  const [selectedEventIDs, setSelectedEventIDs] = useState<string[]>([]);
+
+  const events: EventInput[] = [];
+
+  selectedEventIDs.forEach((id) => {
+    const keys = Object.keys(props.root.modules);
+
+    let event: UniversityEvent | undefined;
+
+    keys.forEach((k) => {
+      const module = props.root.modules[k];
+      const _event = module.events.find((e) => e.eventID === id);
+      if (_event) {
+        event = _event;
+      }
+    });
+
+    if (!event) {
+      return;
+    }
+
+    const dates = event.dates.map((d) => formatRawDate(d.raw));
+
+    dates.forEach((date) => {
+      if (!isValidRawDate(date)) {
+        return;
+      }
+
+      const splits = date.split(',');
+      const weekday = splits[0];
+      const days = splits[1].trim();
+
+      const beginHour = parseInt(days.split('-')[0].trim().split(':')[0]);
+      const beginMin = parseInt(days.split('-')[0].trim().split(':')[1]);
+      const endHour = parseInt(days.split('-')[1].trim().split(':')[0]);
+      const endMin = parseInt(days.split('-')[1].trim().split(':')[1]);
+
+      let begin: Date | undefined;
+      let end: Date | undefined;
+
+      switch (weekday) {
+        case 'Mo.': {
+          begin = new Date(2023, 3, 17, beginHour, beginMin);
+          end = new Date(2023, 3, 17, endHour, endMin);
+          break;
+        }
+        case 'Di.': {
+          begin = new Date(2023, 3, 18, beginHour, beginMin);
+          end = new Date(2023, 3, 18, endHour, endMin);
+          break;
+        }
+        case 'Mi.': {
+          begin = new Date(2023, 3, 19, beginHour, beginMin);
+          end = new Date(2023, 3, 19, endHour, endMin);
+          break;
+        }
+        case 'Do.': {
+          begin = new Date(2023, 3, 20, beginHour, beginMin);
+          end = new Date(2023, 3, 20, endHour, endMin);
+          break;
+        }
+        case 'Fr.': {
+          begin = new Date(2023, 3, 21, beginHour, beginMin);
+          end = new Date(2023, 3, 21, endHour, endMin);
+          break;
+        }
+      }
+
+      const d = {
+        date: begin,
+        end,
+        title: `${event?.name} (${event?.type})`,
+        textColor: 'white',
+        color:
+          event?.type === UniversityEventType.Vorlesung
+            ? theme.palette.primary.main
+            : theme.palette.success.main,
+      };
+
+      events.push(d);
+    });
+  });
+
   return (
     <Page
       title="Sommersemester 2023"
       sx={{ bgcolor: 'background.default', height: '100vh' }}
     >
       <Container sx={{ py: 8, bgcolor: 'background.default' }}>
-        <Typography variant="h2">
-          Mathe-Vorlesungsverzeichnis SS 2023
-        </Typography>
-        <Typography variant="h3" color="text.secondary">
+        <Typography variant="h2">Mathe-Kursverzeichnis SS 2023</Typography>
+        <Typography variant="h3" color="text.secondary" gutterBottom>
           Technische Universität Berlin
         </Typography>
 
-        <Typography variant="subtitle1" color="text.secondary">
-          Zuletzt aktualisiert: {props.updatedAt}
-        </Typography>
+        <Box sx={{ my: 2 }}>
+          <Typography variant="body1">
+            Das Verzeichnis wird täglich einmal aktualisiert.
+            <br />
+            Alle Daten stammen von{' '}
+            <a href="https://moseskonto.tu-berlin.de">
+              moseskonto.tu-berlin.de
+            </a>
+            . <br />
+            Zuletzt aktualisiert: {props.updatedAt}
+          </Typography>
+          <Typography sx={{ mt: 1 }} variant="body1">
+            Verbesserungsvorschläge an:{' '}
+            <a href="mailto:vorderbein_stapfen0v@icloud.com">
+              vorderbein_stapfen0v@icloud.com
+            </a>
+          </Typography>
+        </Box>
 
+        <Box sx={{ my: 2 }}>
+          <Typography variant="h5" gutterBottom>
+            Mein Wochenplan
+          </Typography>
+          <FullCalendar
+            plugins={[timeGridPlugin]}
+            initialView="timeGridWeek"
+            weekends={false}
+            height={550}
+            allDaySlot={false}
+            locale={'de'}
+            headerToolbar={false}
+            slotDuration={'0:30'}
+            events={events}
+            initialDate={new Date(2023, 3, 17, 14, 0)}
+            scrollTime={'08:00:00'}
+          />
+        </Box>
+
+        <Typography sx={{ mt: 4 }} variant="h5" gutterBottom>
+          Verzeichnis
+        </Typography>
         <Stack direction="column" sx={{ my: 2 }}>
           {Object.keys(props.root.modules)
             .sort((a, b) => a.localeCompare(b))
@@ -104,7 +241,9 @@ export default function Home(props: Props) {
               return (
                 <Accordion key={key}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography>{module.name}</Typography>
+                    <Typography variant="subtitle1" fontWeight={'regular'}>
+                      {module.name}
+                    </Typography>
                   </AccordionSummary>
                   <AccordionDetails>
                     <List>
@@ -112,11 +251,72 @@ export default function Home(props: Props) {
                         return (
                           <ListItem key={ev.type} disablePadding>
                             <ListItemButton
-                              dense
                               href={getLink(ev.eventID ?? '')}
                               target="_blank"
                             >
-                              {ev.type}
+                              <Typography
+                                variant="body1"
+                                sx={{ minWidth: 200 }}
+                              >
+                                <strong>{ev.type}</strong>{' '}
+                                {ev.lecturer
+                                  ? ` (${ev.lecturer.split(',')[0]})`
+                                  : ''}
+                              </Typography>
+
+                              {ev.dates.length > 0 &&
+                                isValidRawDate(
+                                  formatRawDate(ev.dates[0].raw)
+                                ) && (
+                                  <Button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      if (
+                                        selectedEventIDs.includes(
+                                          ev.eventID ?? ''
+                                        )
+                                      ) {
+                                        setSelectedEventIDs(
+                                          selectedEventIDs.filter(
+                                            (s) => s !== ev.eventID
+                                          )
+                                        );
+                                      } else {
+                                        setSelectedEventIDs([
+                                          ...selectedEventIDs,
+                                          ev.eventID ?? '',
+                                        ]);
+                                      }
+                                    }}
+                                    sx={{ textTransform: 'none' }}
+                                  >
+                                    {!selectedEventIDs.includes(
+                                      ev.eventID ?? ''
+                                    )
+                                      ? 'Hinzufügen'
+                                      : 'Entfernen'}
+                                  </Button>
+                                )}
+                              <Stack
+                                spacing={1}
+                                gap={1}
+                                direction="row"
+                                sx={{ pl: 3, maxWidth: '100%' }}
+                                flexWrap={'wrap'}
+                              >
+                                {ev.dates.map((s) => (
+                                  <Label
+                                    key={s.raw}
+                                    color={
+                                      ev.type === UniversityEventType.Vorlesung
+                                        ? 'primary'
+                                        : 'success'
+                                    }
+                                  >
+                                    {formatRawDate(s.raw)}
+                                  </Label>
+                                ))}
+                              </Stack>
                             </ListItemButton>
                           </ListItem>
                         );
@@ -143,6 +343,7 @@ export async function getStaticProps() {
     const modulListenGruppe = await fetchModulListenGruppe(studiengang);
 
     for (let i = 0; i < modulListenGruppe.length; i++) {
+      // for (let i = 2; i < 3; i++) {
       const { value, name } = modulListenGruppe[i];
 
       if (name === 'Listengruppe wählen...') {

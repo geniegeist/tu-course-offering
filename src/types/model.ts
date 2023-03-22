@@ -12,6 +12,12 @@ export type UniversityEvent = {
   link?: string;
   eventID: string | null;
   type: UniversityEventType;
+  lecturer: string | undefined | null;
+  dates: UniversityEventDate[];
+};
+
+export type UniversityEventDate = {
+  raw: string;
 };
 
 export type Modul = {

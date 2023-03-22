@@ -1,6 +1,7 @@
 import {
   ModulListenGruppe,
   UniversityEvent,
+  UniversityEventDate,
   UniversityEventType,
 } from '@/types/model';
 import axios from 'axios';
@@ -81,9 +82,8 @@ export async function fetchVertiefungsModule(
         console.log('Unknown: ', secondColumnText);
       }
 
-      const name = $(aElement)
-        .text()
-        .trim()
+      const dirtyName = $(aElement).text().trim();
+      const name = dirtyName
         .replace('(Vorlesung)', '')
         .replace('(Übung)', '')
         .replace('(Tutorium)', '')
@@ -100,11 +100,35 @@ export async function fetchVertiefungsModule(
         link.substring(beginIndex).indexOf('&') + beginIndex
       );
 
+      // https://api.jquery.com/attribute-starts-with-selector/
+      const lecturer = $(`.popover-anchor[title^='${dirtyName}']`)
+        .find($('.form-group'))
+        .find($('label:contains("Dozierende")'))
+        .parent()
+        .contents()
+        .last()
+        .text();
+
+      const dates: UniversityEventDate[] = [];
+      const popovers = $(`.popover-anchor[title^='${dirtyName}']`);
+      popovers.each((index, elem) => {
+        const raw = $(elem)
+          .find($('.form-group'))
+          .find($('label:contains("Datum/Uhrzeit")'))
+          .parent()
+          .contents()
+          .last()
+          .text();
+        dates.push({ raw });
+      });
+
       events.push({
         name,
         link,
         eventID,
         type,
+        lecturer,
+        dates,
       });
     });
 

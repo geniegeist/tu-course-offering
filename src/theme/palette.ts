@@ -1,11 +1,20 @@
 import { alpha } from '@mui/material';
 
+export type ColorSchema =
+  | 'primary'
+  | 'secondary'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'error';
+
 const PRIMARY = {
-  lighter: '#C2B3FF',
-  light: '#8045ff',
-  main: '#3302FF',
-  dark: '#0000ca',
-  darker: '#000077',
+  lighter: '#D1E9FC',
+  light: '#76B0F1',
+  main: '#2065D1',
+  dark: '#103996',
+  darker: '#061B64',
+  contrastText: '#fff',
 };
 
 const SECONDARY = {

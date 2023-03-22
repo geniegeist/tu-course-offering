@@ -7,7 +7,7 @@ export default function Document() {
       <Head>
         <meta charSet="utf-8" />
 
-        <meta name="theme-color" content={palette.primary.main} />
+        <meta name="theme-color" content={'#ffffff'} />
       </Head>
       <body>
         <Main />
