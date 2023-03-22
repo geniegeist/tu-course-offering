@@ -1,20 +1,16 @@
 import Page from '@/components/Page';
 import {
-  Avatar,
   Box,
   Button,
   Container,
   List,
   ListItem,
-  ListItemAvatar,
   ListItemButton,
-  ListItemText,
   Stack,
   styled,
   Typography,
   useTheme,
 } from '@mui/material';
-import { mockup } from '@/model/example';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MuiAccordion, { AccordionProps } from '@mui/material/Accordion';
 import MuiAccordionSummary, {
@@ -29,7 +25,6 @@ import {
   UniversityEvent,
   UniversityEventType,
 } from '@/types/model';
-import { mock } from 'node:test';
 import {
   fetchModulListenGruppe,
   fetchVertiefungsModule,
@@ -39,9 +34,8 @@ import { formatRawDate, isValidRawDate } from '@/utils/formatRawDate';
 import Label from '@/components/Label';
 import FullCalendar from '@fullcalendar/react'; // must go before plugins
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { addMinutes, isMonday } from 'date-fns';
 import { useState } from 'react';
-import { EventInput, EventSourceInput } from '@fullcalendar/core';
+import { EventInput } from '@fullcalendar/core';
 
 const Accordion = styled((props: AccordionProps) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -93,8 +87,6 @@ type Props = {
 };
 
 export default function Home(props: Props) {
-  const today = new Date();
-
   const theme = useTheme();
 
   const [selectedEventIDs, setSelectedEventIDs] = useState<string[]>([]);
@@ -107,8 +99,8 @@ export default function Home(props: Props) {
     let event: UniversityEvent | undefined;
 
     keys.forEach((k) => {
-      const module = props.root.modules[k];
-      const _event = module.events.find((e) => e.eventID === id);
+      const mod = props.root.modules[k];
+      const _event = mod.events.find((e) => e.eventID === id);
       if (_event) {
         event = _event;
       }
@@ -236,18 +228,18 @@ export default function Home(props: Props) {
           {Object.keys(props.root.modules)
             .sort((a, b) => a.localeCompare(b))
             .map((key) => {
-              const module = props.root.modules[key];
+              const mod = props.root.modules[key];
 
               return (
                 <Accordion key={key}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant="subtitle1" fontWeight={'regular'}>
-                      {module.name}
+                      {mod.name}
                     </Typography>
                   </AccordionSummary>
                   <AccordionDetails>
                     <List>
-                      {module.events.map((ev) => {
+                      {mod.events.map((ev) => {
                         return (
                           <ListItem key={ev.type} disablePadding>
                             <ListItemButton
