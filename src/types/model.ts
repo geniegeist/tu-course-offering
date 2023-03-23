@@ -18,6 +18,7 @@ export type UniversityEvent = {
 
 export type UniversityEventDate = {
   raw: string;
+  location?: string;
 };
 
 export type Modul = {

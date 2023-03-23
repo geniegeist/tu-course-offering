@@ -120,7 +120,16 @@ export async function fetchVertiefungsModule(modullistengruppe: number, studieng
           .contents()
           .last()
           .text();
-        dates.push({ raw });
+
+        const location = $(elem)
+          .find($('.form-group'))
+          .find($('label:contains("Ort")'))
+          .parent()
+          .contents()
+          .last()
+          .text();
+
+        dates.push({ raw, location });
       });
 
       events.push({

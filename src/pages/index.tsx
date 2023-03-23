@@ -98,9 +98,9 @@ export default function Home(props: Props) {
       return;
     }
 
-    const dates = event.dates.map((d) => formatRawDate(d.raw));
+    const dates = event.dates.map((d) => [formatRawDate(d.raw), d] as const);
 
-    dates.forEach((date) => {
+    dates.forEach(([date, obj]) => {
       if (!isValidRawDate(date)) {
         return;
       }
@@ -145,10 +145,12 @@ export default function Home(props: Props) {
         }
       }
 
-      const d = {
+      const d: EventInput = {
         date: begin,
         end,
-        title: `${event?.name} (${event?.type})`,
+        title: `[${obj.location?.replace(' (CH+)', '')}] ${event?.name?.substring(0, 50)} (${
+          event?.type
+        })`,
         textColor: 'white',
         color:
           event?.type === UniversityEventType.Vorlesung
@@ -172,7 +174,7 @@ export default function Home(props: Props) {
           <Typography variant="body1">
             Das Verzeichnis wird täglich einmal aktualisiert.
             <br />
-            Zuletzt aktualisiert: {new Date(props.updatedAt).toTimeString()}
+            Zuletzt aktualisiert: {new Date(props.updatedAt).toUTCString()}
             . <br />
             Alle Daten stammen von{' '}
             <a href="https://moseskonto.tu-berlin.de">moseskonto.tu-berlin.de</a>.
@@ -187,6 +189,7 @@ export default function Home(props: Props) {
           <Typography variant="h5" gutterBottom>
             Mein Wochenplan
           </Typography>
+
           <FullCalendar
             plugins={[timeGridPlugin]}
             initialView="timeGridWeek"
@@ -259,6 +262,11 @@ export default function Home(props: Props) {
                                         ]);
                                       }
                                     }}
+                                    color={
+                                      !selectedEventIDs.includes(ev.eventID ?? '')
+                                        ? 'primary'
+                                        : 'error'
+                                    }
                                     sx={{ textTransform: 'none', minWidth: 100 }}
                                   >
                                     {!selectedEventIDs.includes(ev.eventID ?? '')
@@ -274,16 +282,11 @@ export default function Home(props: Props) {
                                 flexWrap={'wrap'}
                               >
                                 {ev.dates.map((s) => (
-                                  <Label
-                                    variant="ghost"
-                                    key={s.raw}
-                                    color={
-                                      ev.type === UniversityEventType.Vorlesung
-                                        ? 'primary'
-                                        : 'success'
-                                    }
-                                  >
-                                    {formatRawDate(s.raw)}
+                                  <Label variant="ghost" key={s.raw} color={'info'}>
+                                    {formatRawDate(s.raw) +
+                                      `${
+                                        s.location ? ` [${s.location.replace(' (CH+)', '')}]` : ''
+                                      }`}
                                   </Label>
                                 ))}
                               </Stack>
