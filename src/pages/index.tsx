@@ -26,6 +26,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { useState } from 'react';
 import { EventInput } from '@fullcalendar/core';
 import { Mock_Root } from '@/model/example';
+import { hashCode } from '@/utils/hash';
 
 const Accordion = styled((props: AccordionProps) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -81,7 +82,7 @@ export default function Home(props: Props) {
 
   const events: EventInput[] = [];
 
-  selectedEventIDs.forEach((id) => {
+  selectedEventIDs.forEach((id, index) => {
     const keys = Object.keys(props.root.modules);
 
     let event: UniversityEvent | undefined;
@@ -145,6 +146,8 @@ export default function Home(props: Props) {
         }
       }
 
+      const hash = hashCode(event?.name ?? '') % 5;
+
       const d: EventInput = {
         date: begin,
         end,
@@ -153,9 +156,17 @@ export default function Home(props: Props) {
         })`,
         textColor: 'white',
         color:
-          event?.type === UniversityEventType.Vorlesung
+          hash === 0
             ? theme.palette.primary.main
-            : theme.palette.success.main,
+            : hash === 1
+            ? theme.palette.success.main
+            : hash === 2
+            ? theme.palette.info.main
+            : hash === 3
+            ? theme.palette.error.main
+            : hash === 4
+            ? theme.palette.secondary.main
+            : theme.palette.warning.main,
       };
 
       events.push(d);
