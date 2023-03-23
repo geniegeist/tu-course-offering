@@ -16,7 +16,7 @@ import MuiAccordionSummary, { AccordionSummaryProps } from '@mui/material/Accord
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
 import MuiAccordionDetails from '@mui/material/AccordionDetails';
 import { getLink } from '@/utils/getLink';
-import { Modul, Root, UniversityEvent, UniversityEventType } from '@/types/model';
+import { Modul, Root, UniversityEvent } from '@/types/model';
 import { fetchModulListenGruppe, fetchVertiefungsModule } from '@/services/scraper';
 import delay from 'delay';
 import { formatRawDate, isValidRawDate } from '@/utils/formatRawDate';
@@ -292,8 +292,8 @@ export default function Home(props: Props) {
                                 sx={{ pl: 3, maxWidth: '100%' }}
                                 flexWrap={'wrap'}
                               >
-                                {ev.dates.map((s) => (
-                                  <Label variant="ghost" key={s.raw} color={'info'}>
+                                {ev.dates.map((s, index) => (
+                                  <Label variant="ghost" key={index} color={'info'}>
                                     {formatRawDate(s.raw) +
                                       `${
                                         s.location ? ` [${s.location.replace(' (CH+)', '')}]` : ''
