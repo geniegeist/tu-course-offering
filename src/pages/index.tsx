@@ -5,7 +5,6 @@ import {
   Container,
   List,
   ListItem,
-  ListItemButton,
   Stack,
   styled,
   Typography,
@@ -13,22 +12,12 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MuiAccordion, { AccordionProps } from '@mui/material/Accordion';
-import MuiAccordionSummary, {
-  AccordionSummaryProps,
-} from '@mui/material/AccordionSummary';
+import MuiAccordionSummary, { AccordionSummaryProps } from '@mui/material/AccordionSummary';
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
 import MuiAccordionDetails from '@mui/material/AccordionDetails';
 import { getLink } from '@/utils/getLink';
-import {
-  Modul,
-  Root,
-  UniversityEvent,
-  UniversityEventType,
-} from '@/types/model';
-import {
-  fetchModulListenGruppe,
-  fetchVertiefungsModule,
-} from '@/services/scraper';
+import { Modul, Root, UniversityEvent, UniversityEventType } from '@/types/model';
+import { fetchModulListenGruppe, fetchVertiefungsModule } from '@/services/scraper';
 import delay from 'delay';
 import { formatRawDate, isValidRawDate } from '@/utils/formatRawDate';
 import Label from '@/components/Label';
@@ -36,6 +25,7 @@ import FullCalendar from '@fullcalendar/react'; // must go before plugins
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { useState } from 'react';
 import { EventInput } from '@fullcalendar/core';
+import { Mock_Root } from '@/model/example';
 
 const Accordion = styled((props: AccordionProps) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -56,9 +46,7 @@ const AccordionSummary = styled((props: AccordionSummaryProps) => (
   />
 ))(({ theme }) => ({
   backgroundColor:
-    theme.palette.mode === 'dark'
-      ? 'rgba(255, 255, 255, .05)'
-      : 'rgba(0, 0, 0, .03)',
+    theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, .05)' : 'rgba(0, 0, 0, .03)',
   flexDirection: 'row-reverse',
   '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
     transform: 'rotate(90deg)',
@@ -173,10 +161,7 @@ export default function Home(props: Props) {
   });
 
   return (
-    <Page
-      title="Sommersemester 2023"
-      sx={{ bgcolor: 'background.default', height: '100vh' }}
-    >
+    <Page title="Sommersemester 2023" sx={{ bgcolor: 'background.default', height: '100vh' }}>
       <Container sx={{ py: 8, bgcolor: 'background.default' }}>
         <Typography variant="h2">Mathe-Kursverzeichnis SS 2023</Typography>
         <Typography variant="h3" color="text.secondary" gutterBottom>
@@ -187,18 +172,14 @@ export default function Home(props: Props) {
           <Typography variant="body1">
             Das Verzeichnis wird täglich einmal aktualisiert.
             <br />
-            Alle Daten stammen von{' '}
-            <a href="https://moseskonto.tu-berlin.de">
-              moseskonto.tu-berlin.de
-            </a>
+            Zuletzt aktualisiert: {new Date(props.updatedAt).toTimeString()}
             . <br />
-            Zuletzt aktualisiert: {props.updatedAt}
+            Alle Daten stammen von{' '}
+            <a href="https://moseskonto.tu-berlin.de">moseskonto.tu-berlin.de</a>.
           </Typography>
           <Typography sx={{ mt: 1 }} variant="body1">
             Verbesserungsvorschläge an:{' '}
-            <a href="mailto:vorderbein_stapfen0v@icloud.com">
-              vorderbein_stapfen0v@icloud.com
-            </a>
+            <a href="mailto:vorderbein_stapfen0v@icloud.com">vorderbein_stapfen0v@icloud.com</a>
           </Typography>
         </Box>
 
@@ -231,47 +212,45 @@ export default function Home(props: Props) {
               const mod = props.root.modules[key];
 
               return (
-                <Accordion key={key}>
+                <Accordion key={key} sx={{ bgcolor: 'white', p: 0 }}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant="subtitle1" fontWeight={'regular'}>
                       {mod.name}
                     </Typography>
                   </AccordionSummary>
-                  <AccordionDetails sx={{ p: 0, overflow: 'scroll' }}>
-                    <List>
-                      {mod.events.map((ev) => {
-                        return (
-                          <ListItem key={ev.type} disablePadding>
-                            <ListItemButton
-                              href={getLink(ev.eventID ?? '')}
-                              target="_blank"
-                            >
-                              <Typography
-                                variant="body1"
-                                sx={{ minWidth: 140 }}
-                              >
-                                <strong>{ev.type}</strong>{' '}
-                                {ev.lecturer
-                                  ? ` (${ev.lecturer.split(',')[0]})`
-                                  : ''}
-                              </Typography>
+                  <AccordionDetails sx={{ p: 0, height: '100%' }}>
+                    <List sx={{}}>
+                      {mod.events
+                        .sort((a, b) => a.type.localeCompare(b.type))
+                        .map((ev) => {
+                          return (
+                            <ListItem key={ev.type}>
+                              <Box sx={{ minWidth: 140, mr: 2 }}>
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    textDecoration: 'underline',
+                                    color: 'primary.main',
+                                  }}
+                                  component={'a'}
+                                  href={getLink(ev.eventID ?? '')}
+                                  target="_blank"
+                                >
+                                  <strong>{ev.type}</strong>{' '}
+                                  {ev.lecturer ? ` (${ev.lecturer.split(',')[0]})` : ''}
+                                </Typography>
+                              </Box>
 
                               {ev.dates.length > 0 &&
-                                isValidRawDate(
-                                  formatRawDate(ev.dates[0].raw)
-                                ) && (
+                                isValidRawDate(formatRawDate(ev.dates[0].raw)) && (
                                   <Button
+                                    variant="outlined"
+                                    size="small"
                                     onClick={(e) => {
                                       e.preventDefault();
-                                      if (
-                                        selectedEventIDs.includes(
-                                          ev.eventID ?? ''
-                                        )
-                                      ) {
+                                      if (selectedEventIDs.includes(ev.eventID ?? '')) {
                                         setSelectedEventIDs(
-                                          selectedEventIDs.filter(
-                                            (s) => s !== ev.eventID
-                                          )
+                                          selectedEventIDs.filter((s) => s !== ev.eventID)
                                         );
                                       } else {
                                         setSelectedEventIDs([
@@ -280,11 +259,9 @@ export default function Home(props: Props) {
                                         ]);
                                       }
                                     }}
-                                    sx={{ textTransform: 'none' }}
+                                    sx={{ textTransform: 'none', minWidth: 100 }}
                                   >
-                                    {!selectedEventIDs.includes(
-                                      ev.eventID ?? ''
-                                    )
+                                    {!selectedEventIDs.includes(ev.eventID ?? '')
                                       ? 'Hinzufügen'
                                       : 'Entfernen'}
                                   </Button>
@@ -298,6 +275,7 @@ export default function Home(props: Props) {
                               >
                                 {ev.dates.map((s) => (
                                   <Label
+                                    variant="ghost"
                                     key={s.raw}
                                     color={
                                       ev.type === UniversityEventType.Vorlesung
@@ -309,10 +287,9 @@ export default function Home(props: Props) {
                                   </Label>
                                 ))}
                               </Stack>
-                            </ListItemButton>
-                          </ListItem>
-                        );
-                      })}
+                            </ListItem>
+                          );
+                        })}
                     </List>
                   </AccordionDetails>
                 </Accordion>
@@ -325,42 +302,46 @@ export default function Home(props: Props) {
 }
 
 export async function getStaticProps() {
+  console.log('NODE_ENV: ', process.env.NODE_ENV);
   const now = new Date();
+  const modules: Record<string, Modul> =
+    process.env.NODE_ENV === 'development' ? JSON.parse(Mock_Root) : {};
 
-  const studiengange = [88];
-  const modules: Record<string, Modul> = {};
+  if (process.env.NODE_ENV !== 'development') {
+    const studiengange = [42, 88];
 
-  for (let j = 0; j < studiengange.length; j++) {
-    const studiengang = studiengange[j];
-    const modulListenGruppe = await fetchModulListenGruppe(studiengang);
+    for (let j = 0; j < studiengange.length; j++) {
+      const studiengang = studiengange[j];
+      const modulListenGruppe = await fetchModulListenGruppe(studiengang);
 
-    for (let i = 0; i < modulListenGruppe.length; i++) {
-      const { value, name } = modulListenGruppe[i];
+      for (let i = 0; i < modulListenGruppe.length; i++) {
+        const { value, name } = modulListenGruppe[i];
 
-      if (name === 'Listengruppe wählen...') {
-        continue;
-      }
+        if (name === 'Listengruppe wählen...') {
+          continue;
+        }
 
-      if (value !== null) {
-        const events = await fetchVertiefungsModule(value, studiengang);
-        events.forEach((ev) => {
-          if (!modules[ev.name]) {
-            modules[ev.name] = {
-              name: ev.name,
-              events: [ev],
-            };
-          } else {
-            const events = [...modules[ev.name].events, ev];
-            const uniqueEvents = [
-              ...new Map(events.map((item) => [item.eventID, item])).values(),
-            ];
-            modules[ev.name] = {
-              ...modules[ev.name],
-              events: uniqueEvents,
-            };
-          }
-        });
-        await delay(1000);
+        if (value !== null) {
+          const events = await fetchVertiefungsModule(value, studiengang);
+          events.forEach((ev) => {
+            if (!modules[ev.name]) {
+              modules[ev.name] = {
+                name: ev.name,
+                events: [ev],
+              };
+            } else {
+              const events = [...modules[ev.name].events, ev];
+              const uniqueEvents = [
+                ...new Map(events.map((item) => [item.eventID, item])).values(),
+              ];
+              modules[ev.name] = {
+                ...modules[ev.name],
+                events: uniqueEvents,
+              };
+            }
+          });
+          await delay(1000);
+        }
       }
     }
   }
@@ -374,6 +355,6 @@ export async function getStaticProps() {
       root,
       updatedAt: now.toISOString(),
     },
-    revalidate: 60 * 60 * 24, // In seconds
+    revalidate: 60 * 60 * 8, // In seconds
   };
 }

@@ -1,3 +1,4 @@
+import { Mock_ModulListenGruppeHtml } from '@/model/example';
 import {
   ModulListenGruppe,
   UniversityEvent,
@@ -9,13 +10,20 @@ import cheerio from 'cheerio';
 
 const currentSemester = 70;
 
-export async function fetchModulListenGruppe(studiengang: number) {
+export async function fetchModulListenGruppe(studiengang: number, debug?: boolean) {
   try {
-    const baseURL = `https://moseskonto.tu-berlin.de/moses/verzeichnis/veranstaltungen/studiengangsbereich.html?semester=${currentSemester}&feature=VERZEICHNIS&extended=false&search=true&studiengang=${studiengang}`;
+    let html: any;
 
-    const response = await axios.get(baseURL);
+    if (debug) {
+      html = Mock_ModulListenGruppeHtml;
+    } else {
+      const baseURL = `https://moseskonto.tu-berlin.de/moses/verzeichnis/veranstaltungen/studiengangsbereich.html?semester=${currentSemester}&feature=VERZEICHNIS&extended=false&search=true&studiengang=${studiengang}`;
 
-    const html = response.data;
+      const response = await axios.get(baseURL);
+
+      html = response.data;
+    }
+
     const $ = cheerio.load(html);
 
     const modullistengruppe: ModulListenGruppe[] = [];
@@ -41,16 +49,11 @@ export async function fetchModulListenGruppe(studiengang: number) {
   }
 }
 
-export async function fetchVertiefungsModule(
-  modullistengruppe: number,
-  studiengang: number
-) {
+export async function fetchVertiefungsModule(modullistengruppe: number, studiengang: number) {
   const baseURL = `https://moseskonto.tu-berlin.de/moses/verzeichnis/veranstaltungen/studiengangsbereich.html?semester=${currentSemester}&feature=VERZEICHNIS&extended=false&search=true&studiengang=${studiengang}`;
 
   try {
-    const response = await axios.get(
-      `${baseURL}&modullistengruppe=${modullistengruppe}`
-    );
+    const response = await axios.get(`${baseURL}&modullistengruppe=${modullistengruppe}`);
 
     const html = response.data;
 
@@ -59,8 +62,6 @@ export async function fetchVertiefungsModule(
     const events: UniversityEvent[] = [];
 
     const options = $('table[role=treegrid]').find($('tbody')).find($('tr'));
-
-    // console.log($.html(options));
 
     options.each((index, el) => {
       const aElement = $(el).find($('td')).first().find($('a'));
